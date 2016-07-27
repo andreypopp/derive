@@ -5,10 +5,8 @@
  */
 
 let yargs = require('yargs');
-let ProgressPlugin = require('../lib/ProgressPlugin');
-let Report = require('../lib/Report');
-let Config = require('../lib/Config');
 
+const VIEW_COMPONENT_LOADER = require.resolve('../lib/view-component-loader');
 const context = process.cwd();
 
 let argv = yargs
@@ -24,7 +22,9 @@ let argv = yargs
       requiresArg: true
     },
   })
-  .command('build [-w] [-p]', 'Build',
+  .command(
+    'build [-w] [-p]',
+    'Build',
     yargs => yargs
       .options({
         'watch': {
@@ -41,7 +41,9 @@ let argv = yargs
       .strict(),
     withConfig(buildCommand)
   )
-  .command('serve', 'Serve',
+  .command(
+    'serve',
+    'Serve',
     yargs => yargs
       .options({
         'host': {
@@ -58,14 +60,33 @@ let argv = yargs
       .strict(),
     withConfig(serveCommand)
   )
+  .command(
+    'view-component <component-module>',
+    'Render React component',
+    yargs => yargs
+      .options({
+        'host': {
+          type: 'string',
+          default: 'localhost',
+          describe: 'Host',
+        },
+        'port': {
+          type: 'number',
+          default: 3000,
+          describe: 'Port',
+        },
+      })
+      .strict(),
+    withConfig(viewComponentCommand)
+  )
+  .demand(1)
   .strict().argv;
-
-if (argv._.length === 0) {
-  withConfig(buildCommand)(argv);
-}
 
 function withConfig(command) {
   return argv => {
+
+    let Config = require('../lib/Config');
+
     let options = {context};
     if (argv.config) {
       let config = Config.loadConfig(context, options.config);
@@ -83,13 +104,42 @@ function withConfig(command) {
   };
 }
 
+function viewComponentCommand(argv, options) {
+
+  let Webpack = require('webpack');
+  let WebpackServer = require('webpack-dev-server');
+  let ProgressPlugin = require('../lib/ProgressPlugin');
+  let ReportPlugin = require('../lib/ReportPlugin');
+  let HTMLPlugin = require('html-webpack-plugin');
+
+  options.plugins.push(new ProgressPlugin());
+  options.plugins.push(new ReportPlugin());
+  options.plugins.push(new HTMLPlugin());
+
+  options.entry = VIEW_COMPONENT_LOADER + '!' + argv['component-module'];
+
+  let compiler = Webpack(options);
+
+  let server = new WebpackServer(compiler, {
+    outputPath: '/',
+    quiet: true,
+  }).listen(argv.port, argv.host, err => {
+    if (err) {
+      throw err;
+    }
+  });
+}
+
 function serveCommand(argv, options) {
 
   let Webpack = require('webpack');
   let WebpackServer = require('webpack-dev-server');
+  let ProgressPlugin = require('../lib/ProgressPlugin');
+  let ReportPlugin = require('../lib/ReportPlugin');
   let HTMLPlugin = require('html-webpack-plugin');
 
   options.plugins.push(new ProgressPlugin());
+  options.plugins.push(new ReportPlugin());
   options.plugins.push(new HTMLPlugin());
 
   let compiler = Webpack(options);
@@ -102,20 +152,13 @@ function serveCommand(argv, options) {
       throw err;
     }
   });
-
-
-  compiler.plugin('done', stats => {
-    Report.printReport(stats, options);
-  });
-
-  compiler.plugin('fail', stats => {
-    Report.printReport(stats, options);
-  });
 }
 
 function buildCommand(argv, options) {
 
   let Webpack = require('webpack');
+  let ProgressPlugin = require('../lib/ProgressPlugin');
+  let ReportPlugin = require('../lib/ReportPlugin');
 
   if (argv.watch) {
     options.watch = true;
@@ -126,12 +169,12 @@ function buildCommand(argv, options) {
   if (options.watch) {
     options.plugins.push(new ProgressPlugin());
   }
+  options.plugins.push(new ReportPlugin());
 
   let compiler = Webpack(options);
 
   function onDone(err, stats) {
     if (err) {
-
       console.error(err.stack || err);
       if (err.details) {
         console.error(err.details);
@@ -140,9 +183,6 @@ function buildCommand(argv, options) {
         exit(1);
       }
     } else {
-
-      Report.printReport(stats, options);
-
       if (!options.watch && stats.hasErrors()) {
         exit(2);
       }
