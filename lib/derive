@@ -1,0 +1,126 @@
+#!/usr/bin/env node
+/**
+ * @author Andrey Popp <8mayday@gmail.com>
+ * @license MIT
+ */
+
+let webpack = require('webpack');
+let yargs = require('yargs');
+let ProgressPlugin = require('./ProgressPlugin');
+let Report = require('./Report');
+let Config = require('./Config');
+
+const context = process.cwd();
+
+let argv = yargs
+  .help('help')
+  .alias('help', 'h')
+  .options({
+    'config': {
+      type: 'string',
+      global: true,
+      alias: 'c',
+      describe: 'Path to the config file',
+      defaultDescription: 'derive.config.js',
+      requiresArg: true
+    },
+  })
+  .command('build [-w] [-p]', 'Build',
+    yargs => yargs
+      .options({
+        'watch': {
+          type: 'boolean',
+          alias: 'w',
+          describe: 'Watch the filesystem for changes',
+        },
+        'production': {
+          type: 'boolean',
+          alias: 'p',
+          describe: 'Produce a production build',
+        },
+      })
+      .strict(),
+    withConfig(buildCommand)
+  )
+  .strict().argv;
+
+if (argv._.length === 0) {
+  withConfig(buildCommand)(argv);
+}
+
+function withConfig(command) {
+  return argv => {
+    let options = {context};
+    if (argv.config) {
+      let config = Config.loadConfig(context, options.config);
+      if (config === null) {
+        console.error('error: cannot load config file', options.config);
+				process.on('exit', () => {
+					process.exit(1);
+				});
+      }
+      options = Object.assign(
+        {}, options, config);
+    } else {
+      options = Object.assign(
+        {}, options, Config.loadConfig(context, 'derive.config.js'));
+    }
+    command(argv, options);
+  };
+}
+
+function buildCommand(argv, options) {
+
+  if (argv.watch) {
+    options.watch = true;
+  }
+
+	Error.stackTraceLimit = 30;
+
+  if (!options.plugins) {
+    options.plugins = [];
+  }
+
+	if (options.watch) {
+	  options.plugins.push(new ProgressPlugin());
+  }
+
+	let compiler = webpack(options);
+
+	function onDone(err, stats) {
+		if (err) {
+
+			console.error(err.stack || err);
+			if (err.details) {
+			  console.error(err.details);
+      }
+			if (!options.watch) {
+				process.on('exit', () => {
+					process.exit(1);
+				});
+			}
+		} else {
+
+      Report.printReport(stats, options);
+
+      if (!options.watch && stats.hasErrors()) {
+        process.on('exit', () => {
+          process.exit(2);
+        });
+      }
+    }
+
+		if (!options.watch) {
+			// Do not keep cache anymore
+			compiler.purgeInputFileSystem();
+		}
+
+	}
+
+	if (options.watch) {
+		let watchOptions = options.watchOptions || options.watch || {};
+		compiler.watch(watchOptions, onDone);
+	} else {
+		compiler.run(onDone);
+  }
+}

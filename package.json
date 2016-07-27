@@ -1,0 +1,46 @@
+{
+  "name": "@derivative/build",
+  "version": "0.1.0",
+  "description": "Zero config build system on top of Webpack",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "bin": {
+    "derive": "./lib/derive"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/derivative/build.git"
+  },
+  "keywords": [
+    "build",
+    "build-system",
+    "webpack"
+  ],
+  "author": "Andrey Popp <8mayday@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/derivative/build/issues"
+  },
+  "homepage": "https://github.com/derivative/build#readme",
+  "dependencies": {
+    "babel-code-frame": "^6.11.0",
+    "babel-core": "^6.11.4",
+    "babel-loader": "^6.2.4",
+    "babel-preset-es2015-webpack": "^6.4.2",
+    "chalk": "^1.1.3",
+    "css-loader": "^0.23.1",
+    "eslint": "^3.1.1",
+    "loader-utils": "^0.2.15",
+    "lodash": "^4.14.0",
+    "minimatch": "^3.0.2",
+    "node-sass": "^3.8.0",
+    "pnpm": "^0.24.0",
+    "sass-loader": "^4.0.0",
+    "style-loader": "^0.13.1",
+    "supports-color": "^3.1.2",
+    "webpack": "^2.1.0-beta.20",
+    "yargs": "^4.8.1"
+  }
+}
