@@ -4,11 +4,10 @@
  * @license MIT
  */
 
-let webpack = require('webpack');
 let yargs = require('yargs');
-let ProgressPlugin = require('./ProgressPlugin');
-let Report = require('./Report');
-let Config = require('./Config');
+let ProgressPlugin = require('../lib/ProgressPlugin');
+let Report = require('../lib/Report');
+let Config = require('../lib/Config');
 
 const context = process.cwd();
 
@@ -42,6 +41,23 @@ let argv = yargs
       .strict(),
     withConfig(buildCommand)
   )
+  .command('serve', 'Serve',
+    yargs => yargs
+      .options({
+        'host': {
+          type: 'string',
+          default: 'localhost',
+          describe: 'Host',
+        },
+        'port': {
+          type: 'number',
+          default: 3000,
+          describe: 'Port',
+        },
+      })
+      .strict(),
+    withConfig(serveCommand)
+  )
   .strict().argv;
 
 if (argv._.length === 0) {
@@ -55,9 +71,7 @@ function withConfig(command) {
       let config = Config.loadConfig(context, options.config);
       if (config === null) {
         console.error('error: cannot load config file', options.config);
-        process.on('exit', () => {
-          process.exit(1);
-        });
+        exit(1);
       }
       options = Object.assign(
         {}, options, config);
@@ -69,7 +83,39 @@ function withConfig(command) {
   };
 }
 
+function serveCommand(argv, options) {
+
+  let Webpack = require('webpack');
+  let WebpackServer = require('webpack-dev-server');
+  let HTMLPlugin = require('html-webpack-plugin');
+
+  options.plugins.push(new ProgressPlugin());
+  options.plugins.push(new HTMLPlugin());
+
+  let compiler = Webpack(options);
+
+  let server = new WebpackServer(compiler, {
+    outputPath: '/',
+    quiet: true,
+  }).listen(argv.port, argv.host, err => {
+    if (err) {
+      throw err;
+    }
+  });
+
+
+  compiler.plugin('done', stats => {
+    Report.printReport(stats, options);
+  });
+
+  compiler.plugin('fail', stats => {
+    Report.printReport(stats, options);
+  });
+}
+
 function buildCommand(argv, options) {
+
+  let Webpack = require('webpack');
 
   if (argv.watch) {
     options.watch = true;
@@ -77,15 +123,11 @@ function buildCommand(argv, options) {
 
   Error.stackTraceLimit = 30;
 
-  if (!options.plugins) {
-    options.plugins = [];
-  }
-
   if (options.watch) {
     options.plugins.push(new ProgressPlugin());
   }
 
-  let compiler = webpack(options);
+  let compiler = Webpack(options);
 
   function onDone(err, stats) {
     if (err) {
@@ -95,18 +137,14 @@ function buildCommand(argv, options) {
         console.error(err.details);
       }
       if (!options.watch) {
-        process.on('exit', () => {
-          process.exit(1);
-        });
+        exit(1);
       }
     } else {
 
       Report.printReport(stats, options);
 
       if (!options.watch && stats.hasErrors()) {
-        process.on('exit', () => {
-          process.exit(2);
-        });
+        exit(2);
       }
     }
 
@@ -123,4 +161,8 @@ function buildCommand(argv, options) {
   } else {
     compiler.run(onDone);
   }
+}
+
+function exit(code = 0) {
+  process.on('exit', () => process.exit(code));
 }
