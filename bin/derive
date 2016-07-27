@@ -7,6 +7,9 @@
 let yargs = require('yargs');
 
 const VIEW_COMPONENT_LOADER = require.resolve('../lib/view-component-loader');
+const WEBPACK_DEV_SERVER_CLIENT = require.resolve('webpack-dev-server/client');
+const WEBPACK_DEV_SERVER_HOT = require.resolve('webpack/hot/dev-server');
+
 const context = process.cwd();
 
 let argv = yargs
@@ -56,6 +59,10 @@ let argv = yargs
           default: 3000,
           describe: 'Port',
         },
+        'hmr': {
+          type: 'boolean',
+          describe: 'Enable hot module replacement',
+        },
       })
       .strict(),
     withConfig(serveCommand)
@@ -74,6 +81,10 @@ let argv = yargs
           type: 'number',
           default: 3000,
           describe: 'Port',
+        },
+        'hmr': {
+          type: 'boolean',
+          describe: 'Enable hot module replacement',
         },
       })
       .strict(),
@@ -111,18 +122,30 @@ function viewComponentCommand(argv, options) {
   let ProgressPlugin = require('../lib/ProgressPlugin');
   let ReportPlugin = require('../lib/ReportPlugin');
   let HTMLPlugin = require('html-webpack-plugin');
+  let HotModuleReplacementPlugin = require('webpack/lib/HotModuleReplacementPlugin');
 
   options.plugins.push(new ProgressPlugin());
   options.plugins.push(new ReportPlugin());
   options.plugins.push(new HTMLPlugin());
 
-  options.entry = VIEW_COMPONENT_LOADER + '!' + argv['component-module'];
+  options.entry = [
+    VIEW_COMPONENT_LOADER + '!' + argv['component-module'],
+  ];
+
+  if (argv.hmr) {
+    options.plugins.push(new HotModuleReplacementPlugin());
+    options.entry.unshift(
+      WEBPACK_DEV_SERVER_CLIENT + `?http://${argv.host}:${argv.port}`,
+      WEBPACK_DEV_SERVER_HOT
+    )
+  }
 
   let compiler = Webpack(options);
 
   let server = new WebpackServer(compiler, {
     outputPath: '/',
     quiet: true,
+    hot: argv.hmr,
   }).listen(argv.port, argv.host, err => {
     if (err) {
       throw err;
@@ -138,6 +161,14 @@ function serveCommand(argv, options) {
   let ReportPlugin = require('../lib/ReportPlugin');
   let HTMLPlugin = require('html-webpack-plugin');
 
+  if (argv.hmr) {
+    options.plugins.push(new HotModuleReplacementPlugin());
+    options.entry.unshift(
+      WEBPACK_DEV_SERVER_CLIENT + `?http://${argv.host}:${argv.port}`,
+      WEBPACK_DEV_SERVER_HOT
+    )
+  }
+
   options.plugins.push(new ProgressPlugin());
   options.plugins.push(new ReportPlugin());
   options.plugins.push(new HTMLPlugin());
@@ -147,6 +178,7 @@ function serveCommand(argv, options) {
   let server = new WebpackServer(compiler, {
     outputPath: '/',
     quiet: true,
+    hot: argv.hmr,
   }).listen(argv.port, argv.host, err => {
     if (err) {
       throw err;
