@@ -55,9 +55,9 @@ function withConfig(command) {
       let config = Config.loadConfig(context, options.config);
       if (config === null) {
         console.error('error: cannot load config file', options.config);
-				process.on('exit', () => {
-					process.exit(1);
-				});
+        process.on('exit', () => {
+          process.exit(1);
+        });
       }
       options = Object.assign(
         {}, options, config);
@@ -75,31 +75,31 @@ function buildCommand(argv, options) {
     options.watch = true;
   }
 
-	Error.stackTraceLimit = 30;
+  Error.stackTraceLimit = 30;
 
   if (!options.plugins) {
     options.plugins = [];
   }
 
-	if (options.watch) {
-	  options.plugins.push(new ProgressPlugin());
+  if (options.watch) {
+    options.plugins.push(new ProgressPlugin());
   }
 
-	let compiler = webpack(options);
+  let compiler = webpack(options);
 
-	function onDone(err, stats) {
-		if (err) {
+  function onDone(err, stats) {
+    if (err) {
 
-			console.error(err.stack || err);
-			if (err.details) {
-			  console.error(err.details);
+      console.error(err.stack || err);
+      if (err.details) {
+        console.error(err.details);
       }
-			if (!options.watch) {
-				process.on('exit', () => {
-					process.exit(1);
-				});
-			}
-		} else {
+      if (!options.watch) {
+        process.on('exit', () => {
+          process.exit(1);
+        });
+      }
+    } else {
 
       Report.printReport(stats, options);
 
@@ -110,17 +110,17 @@ function buildCommand(argv, options) {
       }
     }
 
-		if (!options.watch) {
-			// Do not keep cache anymore
-			compiler.purgeInputFileSystem();
-		}
+    if (!options.watch) {
+      // Do not keep cache anymore
+      compiler.purgeInputFileSystem();
+    }
 
-	}
+  }
 
-	if (options.watch) {
-		let watchOptions = options.watchOptions || options.watch || {};
-		compiler.watch(watchOptions, onDone);
-	} else {
-		compiler.run(onDone);
+  if (options.watch) {
+    let watchOptions = options.watchOptions || options.watch || {};
+    compiler.watch(watchOptions, onDone);
+  } else {
+    compiler.run(onDone);
   }
 }
