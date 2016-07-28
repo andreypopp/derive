@@ -35,6 +35,11 @@ let argv = yargs
           alias: 'w',
           describe: 'Watch the filesystem for changes',
         },
+        'progress': {
+          type: 'boolean',
+          default: true,
+          describe: 'Do not report progress',
+        },
         'check': {
           type: 'boolean',
           describe: 'Report code analysis',
@@ -63,6 +68,10 @@ let argv = yargs
           default: 3000,
           describe: 'Port',
         },
+        'progress': {
+          type: 'boolean',
+          describe: 'Do not report progress',
+        },
         'check': {
           type: 'boolean',
           describe: 'Report code analysis',
@@ -84,6 +93,10 @@ let argv = yargs
           type: 'string',
           default: 'localhost',
           describe: 'Host',
+        },
+        'progress': {
+          type: 'boolean',
+          describe: 'Do not report progress',
         },
         'port': {
           type: 'number',
@@ -111,6 +124,10 @@ let argv = yargs
           type: 'boolean',
           alias: 'w',
           describe: 'Watch the filesystem for changes',
+        },
+        'progress': {
+          type: 'boolean',
+          describe: 'Do not report progress',
         },
       })
       .strict(),
@@ -150,7 +167,9 @@ function viewComponentCommand(argv, options) {
   let HTMLPlugin = require('html-webpack-plugin');
   let HotModuleReplacementPlugin = require('webpack/lib/HotModuleReplacementPlugin');
 
-  options.plugins.push(new ProgressPlugin());
+  if (argv.progress) {
+    options.plugins.push(new ProgressPlugin());
+  }
   options.plugins.push(new ReportPlugin());
   options.plugins.push(new HTMLPlugin());
 
@@ -200,7 +219,9 @@ function serveCommand(argv, options) {
     )
   }
 
-  options.plugins.push(new ProgressPlugin());
+  if (argv.progress) {
+    options.plugins.push(new ProgressPlugin());
+  }
   options.plugins.push(new ReportPlugin());
   options.plugins.push(new HTMLPlugin());
 
@@ -247,7 +268,7 @@ function checkCommand(argv, options) {
     options.watch = true;
   }
 
-  if (options.watch) {
+  if (options.watch && argv.progress) {
     options.plugins.push(new ProgressPlugin());
   }
   options.plugins.push(new ReportPlugin());
@@ -302,7 +323,7 @@ function buildCommand(argv, options) {
 
   Error.stackTraceLimit = 30;
 
-  if (options.watch) {
+  if (options.watch && argv.progress) {
     options.plugins.push(new ProgressPlugin());
   }
   options.plugins.push(new ReportPlugin());
