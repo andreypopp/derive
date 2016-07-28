@@ -4,6 +4,8 @@
  * @license MIT
  */
 
+let fs = require('fs');
+let path = require('path');
 let yargs = require('yargs');
 
 const VIEW_COMPONENT_LOADER = require.resolve('../lib/view-component-loader');
@@ -174,7 +176,15 @@ function viewComponentCommand(argv, options) {
     options.plugins.push(new ProgressPlugin());
   }
   options.plugins.push(new ReportPlugin());
-  options.plugins.push(new HTMLPlugin());
+  options.plugins.push(new HTMLPlugin({
+    title: 'View Component',
+    template: require.resolve('../lib/view-component-template.html'),
+  }));
+
+  options.plugins.push(new Webpack.DllReferencePlugin({
+    context: path.join(__dirname, '..', 'react-dev-dll'),
+    manifest: require('../react-dev-dll/react_dev-manifest.json'),
+  }));
 
   options.entry = [
     VIEW_COMPONENT_LOADER + '!' + argv['component-module'],
@@ -199,7 +209,14 @@ function viewComponentCommand(argv, options) {
     outputPath: '/',
     quiet: true,
     hot: argv.hmr,
-  }).listen(argv.port, argv.host, err => {
+  });
+
+  server.app.get('/__react-dev-dll__.js', (req, res) => {
+    let filename = path.join(__dirname, '..', 'react-dev-dll', 'react_dev.js')
+    fs.createReadStream(filename).pipe(res);
+  });
+
+  server.listen(argv.port, argv.host, err => {
     if (err) {
       throw err;
     }

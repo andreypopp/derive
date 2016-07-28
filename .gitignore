@@ -1,2 +1,4 @@
 node_modules/
 example/
+react-dev-dll/react_dev-manifest.json
+react-dev-dll/react_dev.js
