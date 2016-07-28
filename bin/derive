@@ -38,7 +38,7 @@ let argv = yargs
         'progress': {
           type: 'boolean',
           default: true,
-          describe: 'Do not report progress',
+          describe: 'Report progress (only when --watch is active)',
         },
         'check': {
           type: 'boolean',
@@ -70,7 +70,8 @@ let argv = yargs
         },
         'progress': {
           type: 'boolean',
-          describe: 'Do not report progress',
+          default: true,
+          describe: 'Report progress',
         },
         'check': {
           type: 'boolean',
@@ -96,7 +97,8 @@ let argv = yargs
         },
         'progress': {
           type: 'boolean',
-          describe: 'Do not report progress',
+          default: true,
+          describe: 'Report progress',
         },
         'port': {
           type: 'number',
@@ -127,7 +129,8 @@ let argv = yargs
         },
         'progress': {
           type: 'boolean',
-          describe: 'Do not report progress',
+          default: true,
+          describe: 'Report progress (only when --watch is active)',
         },
       })
       .strict(),
