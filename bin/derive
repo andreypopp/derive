@@ -263,21 +263,6 @@ function serveCommand(argv, options) {
   });
 }
 
-function configureCheckPlugin(check, context) {
-  let Config = require('../lib/Config');
-  let CheckPlugin = require('../lib/CheckPlugin');
-
-  let pluginList = [];
-  for (let pattern in check) {
-    let loader = Config.resolveLoader(check[pattern], context);
-    pluginList.push(new CheckPlugin({
-      context: context,
-      pattern, loader
-    }));
-  }
-  return pluginList;
-}
-
 function checkCommand(argv, options) {
 
   let Webpack = require('webpack');
@@ -299,36 +284,7 @@ function checkCommand(argv, options) {
 
   options.entry = undefined;
 
-  let compiler = Webpack(options);
-
-  function onDone(err, stats) {
-    if (err) {
-      console.error(err.stack || err);
-      if (err.details) {
-        console.error(err.details);
-      }
-      if (!options.watch) {
-        exit(1);
-      }
-    } else {
-      if (!options.watch && stats.hasErrors()) {
-        exit(2);
-      }
-    }
-
-    if (!options.watch) {
-      // Do not keep cache anymore
-      compiler.purgeInputFileSystem();
-    }
-
-  }
-
-  if (options.watch) {
-    let watchOptions = options.watchOptions || options.watch || {};
-    compiler.watch(watchOptions, onDone);
-  } else {
-    compiler.run(onDone);
-  }
+  runCompiler(options);
 }
 
 function buildCommand(argv, options) {
@@ -353,6 +309,12 @@ function buildCommand(argv, options) {
       configureCheckPlugin(options.check, options.context));
   }
 
+  runCompiler(options);
+}
+
+function runCompiler(options) {
+  let Webpack = require('webpack');
+
   let compiler = Webpack(options);
 
   function onDone(err, stats) {
@@ -378,11 +340,30 @@ function buildCommand(argv, options) {
   }
 
   if (options.watch) {
-    let watchOptions = options.watchOptions || options.watch || {};
+    let watchOptions = (
+      options.watchOptions ||
+      options.watch ||
+      {aggregateTimeout: 500}
+    );
     compiler.watch(watchOptions, onDone);
   } else {
     compiler.run(onDone);
   }
+}
+
+function configureCheckPlugin(check, context) {
+  let Config = require('../lib/Config');
+  let CheckPlugin = require('../lib/CheckPlugin');
+
+  let pluginList = [];
+  for (let pattern in check) {
+    let loader = Config.resolveLoader(check[pattern], context);
+    pluginList.push(new CheckPlugin({
+      context: context,
+      pattern, loader
+    }));
+  }
+  return pluginList;
 }
 
 function exit(code = 0) {
