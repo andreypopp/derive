@@ -1,6 +1,6 @@
 {
   "name": "@derivative/derive",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Zero config build system on top of Webpack",
   "main": "lib/index.js",
   "scripts": {
