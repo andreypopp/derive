@@ -182,8 +182,8 @@ function viewComponentCommand(argv, options) {
   }));
 
   options.plugins.push(new Webpack.DllReferencePlugin({
-    context: path.join(__dirname, '..', 'react-dev-dll'),
-    manifest: require('../react-dev-dll/react_dev-manifest.json'),
+    context: path.join(__dirname, '..', 'lib', 'dll', 'react'),
+    manifest: require('../lib/dll/react/__react-manifest.json'),
   }));
 
   options.entry = [
@@ -211,8 +211,8 @@ function viewComponentCommand(argv, options) {
     hot: argv.hmr,
   });
 
-  server.app.get('/__react-dev-dll__.js', (req, res) => {
-    let filename = path.join(__dirname, '..', 'react-dev-dll', 'react_dev.js')
+  server.app.get('/__react.js', (req, res) => {
+    let filename = path.join(__dirname, '..', 'lib', 'dll', 'react', '__react.js')
     fs.createReadStream(filename).pipe(res);
   });
 
