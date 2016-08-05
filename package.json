@@ -53,7 +53,7 @@
     "yargs": "^4.8.1"
   },
   "devDependencies": {
-    "bundle-dependencies": "^1.0.2"
+    "bundle-deps": "^1.0.0"
   },
   "bundledDependencies": [
     "babel-code-frame",
