@@ -51,5 +51,36 @@
     "webpack": "^2.1.0-beta.20",
     "webpack-dev-server": "^2.1.0-beta.0",
     "yargs": "^4.8.1"
-  }
+  },
+  "devDependencies": {
+    "bundle-dependencies": "^1.0.2"
+  },
+  "bundledDependencies": [
+    "babel-code-frame",
+    "babel-core",
+    "babel-loader",
+    "babel-preset-es2015-webpack",
+    "babel-preset-react",
+    "babel-preset-stage-1",
+    "chalk",
+    "css-loader",
+    "eslint",
+    "file-loader",
+    "html-webpack-plugin",
+    "invariant",
+    "json-loader",
+    "loader-utils",
+    "lodash",
+    "minimatch",
+    "pnpm",
+    "react",
+    "react-dom",
+    "resolve",
+    "style-loader",
+    "supports-color",
+    "url-loader",
+    "webpack",
+    "webpack-dev-server",
+    "yargs"
+  ]
 }
