@@ -24,7 +24,7 @@
     "url": "https://github.com/derivative/build/issues"
   },
   "homepage": "https://github.com/derivative/build#readme",
-  "xdependencies": {
+  "dependencies": {
     "babel-code-frame": "^6.11.0",
     "babel-core": "^6.11.4",
     "babel-loader": "^6.2.4",
