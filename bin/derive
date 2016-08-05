@@ -203,6 +203,20 @@ function viewComponentCommand(argv, options) {
       configureCheckPlugin(options.check, options.context));
   }
 
+  options.resolve = options.resolve || {};
+  options.resolve.alias = options.resolve.alias || {};
+
+  function ref(pkg) {
+    return path.join(__dirname, '../node_modules', pkg);
+  }
+
+  Object.assign(options.resolve.alias, {
+    'react': ref('react'),
+    'react-dom': ref('react-dom'),
+    'webpack-dev-server/client': ref('webpack-dev-server/client'),
+    'webpack/hot/dev-server': ref('webpack/hot/dev-server'),
+  });
+
   let compiler = Webpack(options);
 
   let server = new WebpackServer(compiler, {
